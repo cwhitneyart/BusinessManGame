@@ -16,6 +16,8 @@ public class playerMove : MonoBehaviour {
     
     public Vector3[] wanderPoints; //points that the Player will wander to on it's own
     public GameObject[] destinationObjects; //Grabs points that are put into the inspector. Used to grab vector3 points to set navmesh destinations
+    public GameObject[] seats; //seats that the player can sit on
+    public Vector3[] seatPoints;
     #endregion public
 
     #region private
@@ -36,6 +38,13 @@ public class playerMove : MonoBehaviour {
         for (int i = 0; i < destinationObjects.Length; ++i)
         {
             wanderPoints[i] = destinationObjects[i].transform.position;
+        }
+        
+        //get vector3 of all seats
+        seatPoints = new Vector3[seats.Length];
+        for(int i = 0; i < seats.Length; ++i)
+        {
+            seatPoints[i] = seats[i].transform.position;
         }
 
         //get navmeshAgent
@@ -69,6 +78,13 @@ public class playerMove : MonoBehaviour {
                 destinationReached = false;
             }
         }
+       else if(CurrentState == currState.sitting)
+        {
+            if(moving == true)
+            {
+                moveToSeat();
+            }
+        }
     }
 
     IEnumerator resetBehaviourCheck() //check if behaviour should be changed depending on "die roll"
@@ -77,16 +93,22 @@ public class playerMove : MonoBehaviour {
         {
             yield return new WaitForSeconds(15);
             rollDieBehaviourChange = Random.Range(0, 10);
-            if (rollDieBehaviourChange >= 5)
+            if(rollDieBehaviourChange <= 2)
+            {
+                CurrentState = currState.sitting;
+                StartCoroutine(goAndSit());
+                Debug.Log("Player is going to sit");
+            }
+            if (rollDieBehaviourChange >= 3)
             {
                 CurrentState = currState.wandering; //behaviour changed to wandering
                 StartCoroutine(waitAtDestination());
             }
-            if (rollDieBehaviourChange <= 5)
+            if (rollDieBehaviourChange >= 5)
             {
                 CurrentState = currState.eating; //behaviour changed to eating
             }
-            if (rollDieBehaviourChange <= 8)
+            if (rollDieBehaviourChange >= 8)
             {
                 CurrentState = currState.sleeping; //behaviour changed to sleeping
             }
@@ -110,26 +132,30 @@ public class playerMove : MonoBehaviour {
 
     private void MoveToDestination()
     {
-        // Check if we've reached the destination
-        if (!playerAgent.pathPending)
+        if(CurrentState == currState.wandering)
         {
-            if (playerAgent.remainingDistance <= playerAgent.stoppingDistance)
+            // Check if we've reached the destination
+            if (!playerAgent.pathPending)
             {
-                if (!playerAgent.hasPath || playerAgent.velocity.sqrMagnitude <= 0.1f)
+                if (playerAgent.remainingDistance <= playerAgent.stoppingDistance)
                 {
-                    StartCoroutine(waitAtDestination());
-                    setDestination = false;
-                    moving = false;
-                   //change animator back to idle here:
-  
+                    if (!playerAgent.hasPath || playerAgent.velocity.sqrMagnitude <= 0.1f)
+                    {
+                        StartCoroutine(waitAtDestination());
+                        setDestination = false;
+                        moving = false;
+                        //change animator back to idle here:
+
+                    }
                 }
             }
+            //check if player is moving
+            if (playerAgent.velocity.sqrMagnitude > 0.2f)
+            {
+                //set walking animation here: 
+            }
         }
-        //check if player is moving
-        if (playerAgent.velocity.sqrMagnitude > 0.2f)
-        {
-            //set walking animation here: 
-        }
+       
     }
 
     //wait for predetermined set of seconds, then set a new destination 
@@ -140,12 +166,13 @@ public class playerMove : MonoBehaviour {
             setDestination = true;
             yield return new WaitForSeconds(durationAtDestination);
             Debug.Log("stop waiting at destination");
-            startWandering();
+            //startWandering();
             moving = true;
             setDestination = false;
             startWandering();
             yield break;
-        }     
+        }
+        yield break;  
     }
 
     #endregion wanderingStuff
@@ -155,6 +182,36 @@ public class playerMove : MonoBehaviour {
 
 
     #endregion sleepingStuff
+    #region sittingStuff
+    IEnumerator goAndSit()
+    {
+        playerAgent.SetDestination(seatPoints[0]);
+        yield break;
+    }
 
+    void moveToSeat()
+    {
+        // Check if we've reached the destination
+        if (!playerAgent.pathPending)
+        {
+            if (playerAgent.remainingDistance <= playerAgent.stoppingDistance)
+            {
+                if (!playerAgent.hasPath || playerAgent.velocity.sqrMagnitude <= 0.1f)
+                {
+                    moving = false;
+                    //change animator back to idle here:
+
+                }
+            }
+        }
+        //check if player is moving
+        if (playerAgent.velocity.sqrMagnitude > 0.2f)
+        {
+            //set walking animation here: 
+        }
+    }
+
+
+    #endregion sittingStuff
 
 }
