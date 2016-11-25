@@ -49,7 +49,7 @@ public class playerMove : MonoBehaviour {
 
         //start wandering
         StartCoroutine(waitAtDestination());
-
+        StartCoroutine(resetBehaviourCheck());
     }
 
     void Update()
@@ -67,6 +67,28 @@ public class playerMove : MonoBehaviour {
             {
                 setDestination = false;
                 destinationReached = false;
+            }
+        }
+    }
+
+    IEnumerator resetBehaviourCheck() //check if behaviour should be changed depending on "die roll"
+    {
+        while (true)
+        {
+            yield return new WaitForSeconds(15);
+            rollDieBehaviourChange = Random.Range(0, 10);
+            if (rollDieBehaviourChange >= 5)
+            {
+                CurrentState = currState.wandering; //behaviour changed to wandering
+                StartCoroutine(waitAtDestination());
+            }
+            if (rollDieBehaviourChange <= 5)
+            {
+                CurrentState = currState.eating; //behaviour changed to eating
+            }
+            if (rollDieBehaviourChange <= 8)
+            {
+                CurrentState = currState.sleeping; //behaviour changed to sleeping
             }
         }
     }
