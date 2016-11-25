@@ -1,26 +1,29 @@
 ﻿using UnityEngine;
 using System.Collections;
-
+//This class will handle behaviour of the business man, and his routine.
 public class playerMove : MonoBehaviour {
 
     #region public
     //behaviour stuff
-    public enum currState { wandering, eating, sitting, sleeping };
-    public float behaviourDuration = 10F;
-    public float durationAtDestination = 5F;
+    public enum currState { wandering, eating, sitting, sleeping }; //the current state of the AI
+    currState CurrentState;
 
-    //points that the Player will wander to on it's own
-    public Vector3[] wanderPoints;
-    public GameObject[] destinationObjects;
+    public float behaviourDuration = 10F; //duration that behaviours will last for. This might be replaced with the rolldieBehaviourChange float at some point.
+    public float durationAtDestination = 5F; //Duration that AI will remain at destination for. This can be set as a random range for some added variety
+
+    public float rollDieBehaviourChange;     //used to randomly change behaviours if number lands within certain range. 
+
+    
+    public Vector3[] wanderPoints; //points that the Player will wander to on it's own
+    public GameObject[] destinationObjects; //Grabs points that are put into the inspector. Used to grab vector3 points to set navmesh destinations
     #endregion public
 
     #region private
-    private bool setDestination = false;
-    private bool destinationChanged = false;
-    private bool playerIdle = true;
-    private bool destinationReached = false;
-    private bool moving = false;
-    currState CurrentState;
+    private bool setDestination = false; //checks if destination has been set yet. If this is true the destination will not be set again until set back to false
+    private bool destinationChanged = false; //checks if the destination has been changed. I don't know if this is redundant or not yet. 
+    private bool playerIdle = true; //later on we'll check if the player has not interacted with the business man. If they haven't he will start doing his own thing
+    private bool destinationReached = false; //checks if destination has been reached. Probably redundant
+    private bool moving = false; //Checks if player is currently moving or not.
     #endregion private
 
     //get player navMesh for movement
@@ -44,36 +47,35 @@ public class playerMove : MonoBehaviour {
         playerIdle = true;
         destinationReached = false;
 
+        //start wandering
+        StartCoroutine(waitAtDestination());
+
     }
 
     void Update()
     {
+        //if the businessman is wandering, allow these behaviours to occur
         if (CurrentState == currState.wandering)
         {
-            if(setDestination == false)
-            {
-                StartCoroutine(waitAtDestination());
-            }
-
+            //if player is moving, check that destination has been reached every frame
             if(moving == true)
             {
                 MoveToDestination();
             }
-
+            //if the destination has been reached, turn set destination off so that the destination can be changed again.
             if(destinationReached == true)
             {
                 setDestination = false;
                 destinationReached = false;
             }
-            //set logic for if set destination is true here:
-            //TODO: add logic here
         }
     }
 
-    #region movementstuff
+    #region wanderingStuff
     void startWandering()
     {
-
+        //call a new destination once only
+        //this could probably be a coroutine instead if it needs to be neater
         if (setDestination == false)
         {
             Debug.Log("I'm going to move");
@@ -93,36 +95,44 @@ public class playerMove : MonoBehaviour {
             {
                 if (!playerAgent.hasPath || playerAgent.velocity.sqrMagnitude <= 0.1f)
                 {
+                    StartCoroutine(waitAtDestination());
                     setDestination = false;
                     moving = false;
-                    Debug.Log("Destination Reached");
+                   //change animator back to idle here:
   
-                    //anim.SetFloat("walking", 0);
-                    // Done
                 }
             }
         }
-
+        //check if player is moving
         if (playerAgent.velocity.sqrMagnitude > 0.2f)
         {
-            //Debug.Log("player is moving");
-            // anim.SetFloat("walking", 1);
+            //set walking animation here: 
         }
     }
 
+    //wait for predetermined set of seconds, then set a new destination 
     IEnumerator waitAtDestination()
     {
-        setDestination = true;
-        yield return new WaitForSeconds(durationAtDestination);
-        Debug.Log("stop waiting at destination");
-        startWandering();
-        moving = true;
-        setDestination = false;
-        //setDestination = true;
-        // setDestination = false;
-        yield break;
+        if (CurrentState == currState.wandering)
+        {
+            setDestination = true;
+            yield return new WaitForSeconds(durationAtDestination);
+            Debug.Log("stop waiting at destination");
+            startWandering();
+            moving = true;
+            setDestination = false;
+            startWandering();
+            yield break;
+        }     
     }
 
-    #endregion movementstuff
+    #endregion wanderingStuff
+    #region sleepingStuff
+    //TODO: Set behaviours for what happens when the businessman is sleeping here:
+
+
+
+    #endregion sleepingStuff
+
 
 }
