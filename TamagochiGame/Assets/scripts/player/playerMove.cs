@@ -29,7 +29,7 @@ public class playerMove : MonoBehaviour {
     #endregion private
 
     //get player navMesh for movement
-    NavMeshAgent playerAgent;
+    UnityEngine.AI.NavMeshAgent playerAgent;
 
     void Start()
     {
@@ -48,7 +48,7 @@ public class playerMove : MonoBehaviour {
         }
 
         //get navmeshAgent
-        playerAgent = gameObject.GetComponent<NavMeshAgent>();
+        playerAgent = gameObject.GetComponent<UnityEngine.AI.NavMeshAgent>();
         CurrentState = currState.wandering;
 
         //set bools to initial state
@@ -213,5 +213,14 @@ public class playerMove : MonoBehaviour {
 
 
     #endregion sittingStuff
+    #region eatingStuff
+
+    void CheckFoodSource()
+    {
+       //check if player currently has food to eat. If they do eat it. If not request food depending on current appetite
+    }
+
+
+    #endregion EatingStuff
 
 }
